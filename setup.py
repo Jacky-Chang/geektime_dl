@@ -37,8 +37,7 @@ setup(
         'Jinja2',
         'kindle_maker',
         'requests',
-        'pdfkit',
-        'PyPDF2'
+        'pdfkit'
     ],
     entry_points={
         'console_scripts': [
