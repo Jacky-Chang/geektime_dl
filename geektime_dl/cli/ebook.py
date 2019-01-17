@@ -8,6 +8,7 @@ from . import Command
 from ..geektime_ebook import maker
 from kindle_maker import make_mobi
 from geektime_dl.utils.mail import MailServer
+from . import pdf
 
 
 class EBook(Command):
@@ -45,34 +46,36 @@ class EBook(Command):
         column_title = course_intro['column_title']
 
         output_dir = os.path.join(out_dir, column_title)
-        if not os.path.isdir(output_dir):
-            os.makedirs(output_dir)
-            print('mkdir ' + output_dir)
+        # if not os.path.isdir(output_dir):
+        #     os.makedirs(output_dir)
+        #     print('mkdir ' + output_dir)
+        #
+        # if not force and os.path.isfile(os.path.join(output_dir, '{}.html'.format('简介'))):
+        #     print('简介' + ' exists')
+        # else:
+        #     maker.render_article_html('简介', maker.parse_image(course_intro['column_intro'], output_dir), output_dir)
+        #     print('下载' + column_title + '简介' + ' done')
+        # maker.generate_cover_img(course_intro['column_cover'], output_dir)
+        # print('下载' + column_title + '封面' + ' done')
+        #
+        # ebook_name = self._title(course_intro)
+        # maker.render_toc_md(
+        #     ebook_name + '\n',
+        #     ['# 简介\n'] + ['# ' + maker.format_file_name(t['article_title']) + '\n' for t in articles],
+        #     output_dir
+        # )
+        # print('下载' + column_title + '目录' + ' done')
+        #
+        # for article in articles:
+        #
+        #     title = maker.format_file_name(article['article_title'])
+        #     if not force and os.path.isfile(os.path.join(output_dir, '{}.html'.format(title))):
+        #         print(title + ' exists')
+        #         continue
+        #     maker.render_article_html(title, maker.parse_image(article['article_content'], output_dir), output_dir)
+        #     print('下载' + column_title + '：' + article['article_title'] + ' done')
 
-        if not force and os.path.isfile(os.path.join(output_dir, '{}.html'.format('简介'))):
-            print('简介' + ' exists')
-        else:
-            maker.render_article_html('简介', maker.parse_image(course_intro['column_intro'], output_dir), output_dir)
-            print('下载' + column_title + '简介' + ' done')
-        maker.generate_cover_img(course_intro['column_cover'], output_dir)
-        print('下载' + column_title + '封面' + ' done')
-
-        ebook_name = self._title(course_intro)
-        maker.render_toc_md(
-            ebook_name + '\n',
-            ['# 简介\n'] + ['# ' + maker.format_file_name(t['article_title']) + '\n' for t in articles],
-            output_dir
-        )
-        print('下载' + column_title + '目录' + ' done')
-
-        for article in articles:
-
-            title = maker.format_file_name(article['article_title'])
-            if not force and os.path.isfile(os.path.join(output_dir, '{}.html'.format(title))):
-                print(title + ' exists')
-                continue
-            maker.render_article_html(title, maker.parse_image(article['article_content'], output_dir), output_dir)
-            print('下载' + column_title + '：' + article['article_title'] + ' done')
+        pdf.render_pdf(output_dir, articles, column_title)
 
     def run(self, args):
 
@@ -117,28 +120,28 @@ class EBook(Command):
         course_data['column_title'] = maker.format_file_name(course_data['column_title'])
         self.render_column_source_files(course_data, data, out_dir, force=force)
 
-        # ebook
-        if not source_only:
-            if course_data['update_frequency'] == '全集' and os.path.isfile(os.path.join(out_dir, self._title(course_data)) + '.mobi'):
-                print("{} exists ".format(self._title(course_data)))
-            else:
-                make_mobi(source_dir=os.path.join(out_dir, course_data['column_title']), output_dir=out_dir)
-        if push:
-
-            fn = os.path.join(out_dir, "{}.mobi".format(self._title(course_data)))
-            if os.path.getsize(fn) / 1024.0 / 1024 > 50:
-                print("电子书大小超过50M")
-                return
-            f = open(fn, 'rb')
-            d = f.read()
-            f.close()
-
-            with open('smtp.conf') as f:
-                smtp_conf = json.loads(f.read())
-            m = MailServer(host=smtp_conf['host'], port=smtp_conf['port'], user=smtp_conf['user'], password=smtp_conf['password'], encryption=smtp_conf['encryption'])
-            message = m.build_email(email_to=smtp_conf['email_to'], subject='convert', body='', attachments=[("{}.mobi".format(self._title(course_data)), d)])
-            m.send_email(message)
-            print("push to kindle done")
+        # ebook, pdf instead
+        # if not source_only:
+        #     if course_data['update_frequency'] == '全集' and os.path.isfile(os.path.join(out_dir, self._title(course_data)) + '.mobi'):
+        #         print("{} exists ".format(self._title(course_data)))
+        #     else:
+        #         make_mobi(source_dir=os.path.join(out_dir, course_data['column_title']), output_dir=out_dir)
+        # if push:
+        #
+        #     fn = os.path.join(out_dir, "{}.mobi".format(self._title(course_data)))
+        #     if os.path.getsize(fn) / 1024.0 / 1024 > 50:
+        #         print("电子书大小超过50M")
+        #         return
+        #     f = open(fn, 'rb')
+        #     d = f.read()
+        #     f.close()
+        #
+        #     with open('smtp.conf') as f:
+        #         smtp_conf = json.loads(f.read())
+        #     m = MailServer(host=smtp_conf['host'], port=smtp_conf['port'], user=smtp_conf['user'], password=smtp_conf['password'], encryption=smtp_conf['encryption'])
+        #     message = m.build_email(email_to=smtp_conf['email_to'], subject='convert', body='', attachments=[("{}.mobi".format(self._title(course_data)), d)])
+        #     m.send_email(message)
+        #     print("push to kindle done")
 
     def _timestamp2str(self, timestamp):
         if not timestamp:

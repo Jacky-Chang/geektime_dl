@@ -36,7 +36,9 @@ setup(
     install_requires=[
         'Jinja2',
         'kindle_maker',
-        'requests'
+        'requests',
+        'pdfkit',
+        'PyPDF2'
     ],
     entry_points={
         'console_scripts': [
