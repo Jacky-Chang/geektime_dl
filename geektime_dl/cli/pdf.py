@@ -45,6 +45,7 @@ def render_pdf(output_dir, articles, file_name):
         source_list.append(source_dir)
     pdfkit.from_file(source_list, os.path.join(output_dir, '../{}.pdf'.format(file_name)),
                      cover=cover, options=options)
+    print('生成 {}.pdf done'.format(file_name))
 
 
 def render_cover(output_dir):
